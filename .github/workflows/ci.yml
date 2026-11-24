@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, "hotfix/*"]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  project-checks:
+    name: Project Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run unit tests
+        run: PYTHONPATH=src python3 -m unittest discover -s tests
+
+  governance-tests:
+    name: Governance Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run Governance Integrity Tests
+        run: node --test .github/scripts/*.test.mjs
+
+  ci-gate:
+    name: CI Gate
+    needs: [project-checks, governance-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pass CI Gate
+        run: echo "All checks passed successfully."
